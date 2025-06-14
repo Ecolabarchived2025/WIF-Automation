@@ -1,0 +1,43 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  GOOGLE_PROJECT: "your-project-id"
+  WORKLOAD_IDENTITY_PROVIDER: "projects/123456789012/locations/global/workloadIdentityPools/azuredevops-pool/providers/azuredevops-provider"
+  SERVICE_ACCOUNT_EMAIL: "azuredevops-sa@your-project-id.iam.gserviceaccount.com"
+
+steps:
+  - checkout: self
+
+  - script: |
+      cat <<EOF > terraform/oidc-creds.json
+      {
+        "type": "external_account",
+        "audience": "//iam.googleapis.com/${{ variables.WORKLOAD_IDENTITY_PROVIDER }}",
+        "subject_token_type": "urn:ietf:params:oauth:token-type:jwt",
+        "token_url": "https://sts.googleapis.com/v1/token",
+        "credential_source": {
+          "url": "http://169.254.169.254/metadata/identity/oauth2/token",
+          "headers": {
+            "Metadata-Flavor": "Google"
+          }
+        },
+        "service_account_impersonation_url": "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${{ variables.SERVICE_ACCOUNT_EMAIL }}:generateAccessToken"
+      }
+      EOF
+    displayName: "Create OIDC Credential File"
+
+  - script: |
+      cd terraform
+      terraform init
+    displayName: "Terraform Init"
+
+  - script: |
+      cd terraform
+      terraform apply -auto-approve -var-file="terraform.tfvars"
+    displayName: "Terraform Apply"

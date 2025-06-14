@@ -1,0 +1,10 @@
+project_id   = "egs-automations"
+region       = "us-central1"
+azure_repo   = "Acspro-devOps1/WIF_Deployment" # Azure DevOps repo format
+
+
+
+Output
+
+Service_account_email = "azuredevops-sa@egs-automations.iam.gserviceaccount.com"
+workload_identity_provider_name = "projects/928395041555/locations/global/workloadIdentityPools/azuredevops-pool/providers/azuredevops-provider"
